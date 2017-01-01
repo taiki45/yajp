@@ -1,0 +1,6 @@
+[package]
+name = "yajp"
+version = "0.1.0"
+authors = ["Taiki Ono <taiks.4559@gmail.com>"]
+
+[dependencies]
