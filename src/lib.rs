@@ -4,11 +4,10 @@ use nom::*;
 
 use std::str;
 
-pub fn parse(str: &'static str) -> IResult<&[u8], &[u8]> {
-    named!(string, delimited!(char!('"'), is_not!("\""), char!('"')));
-    named!(value, alt!(string | digit));
-    named!(key_value<&[u8]>, do_parse!(k: string >> char!(':') >> opt!(multispace) >> value >> (k)));
-    named!(parser, delimited!(char!('{'), key_value, char!('}')));
+pub fn parse(str: &'static str) -> IResult<&[u8], (&str, &str)> {
+    named!(string<&str>, map_res!(delimited!(char!('"'), is_not!("\""), char!('"')), str::from_utf8));
+    named!(key_value<(&str, &str)>, do_parse!(k: string >> char!(':') >> opt!(multispace) >> v: string >> (k, v)));
+    named!(parser<(&str, &str)>, delimited!(char!('{'), key_value, char!('}')));
     return parser(str.as_bytes());
 }
 
@@ -16,30 +15,17 @@ pub fn parse(str: &'static str) -> IResult<&[u8], &[u8]> {
 mod tests {
     use super::*;
 
-    // FIXME: to_string() to avoid lifetime invalidation.
-    fn from_result(result: IResult<&[u8], &[u8]>) -> String {
+    fn extact_output<I>(result: IResult<&[u8], I>) -> I {
         return match result {
-            IResult::Done(_, o) => {
-                match str::from_utf8(o) {
-                    Ok(e) => e.to_string(),
-                    Err(e) => panic!("Error on utf8 string conversion: {}", e),
-                }
-            }
+            IResult::Done(_, o) => o,
             IResult::Error(e) => panic!("Parse Error: {}", e),
             IResult::Incomplete(_) => panic!("Incomplete!"),
         };
     }
 
     #[test]
-    #[ignore]
-    fn int_test() {
-        let result = parse("1");
-        assert_eq!(result, IResult::Done("".as_bytes(), "1".as_bytes()))
-    }
-
-    #[test]
     fn object_test() {
-        let result = from_result(parse("{\"key\": \"value\"}"));
-        assert_eq!(result, "key");
+        let result = extact_output(parse("{\"key\": \"value\"}"));
+        assert_eq!(result, ("key", "value"));
     }
 }
