@@ -7,11 +7,11 @@ use std::str::FromStr;
 use std::collections::HashMap;
 
 pub mod json {
-    // TODO: Extend number for float value.
     #[derive(PartialEq, Debug, Clone)]
     pub enum Value {
         Null,
-        Number(i64),
+        Integer(i64),
+        Float(f64),
         String(::std::string::String),
         Object(::HashMap<::std::string::String, Value>),
         Array(Vec<Value>),
@@ -25,7 +25,8 @@ pub fn parse(str: &'static str) -> IResult<&[u8], json::Value> {
 named!(value<json::Value>, alt!(
     null => {|_| json::Value::Null } |
     string => {|s| json::Value::String(String::from(s)) } |
-    integer => {|i| json::Value::Number(i) } |
+    float => {|f| json::Value::Float(f) } |
+    integer => {|i| json::Value::Integer(i) } |
     object => {|h| json::Value::Object(h) } |
     array => {|vs| json::Value::Array(vs) }
 ));
@@ -64,6 +65,18 @@ named!(string<&str>, map_res!(delimited!(char!('"'), is_not!("\""), char!('"')),
 
 named!(integer<i64>, map_res!(map_res!(digit, str::from_utf8), FromStr::from_str));
 
+named!(float<f64>, map_res!(float_chars, from_float_tuple));
+fn from_float_tuple(t: (&str, i64, &str)) -> Result<f64, std::num::ParseFloatError> {
+    let (f, _, s) = t;
+    let s = [f, s].join(".");
+    return FromStr::from_str(&s);
+}
+named!(float_chars<(&str, i64, &str)>, tuple!(
+    map_res!(digit, str::from_utf8),
+    value!(0, tag!(".")),
+    map_res!(digit, str::from_utf8)
+));
+
 named!(null, ws!(tag!("null")));
 
 #[cfg(test)]
@@ -89,7 +102,7 @@ mod tests {
         let result = extact_output(parse(r#"{"key":"value", "key2": null, "key3": [2, 3]}"#));
         let v1 = json::Value::String(String::from("value"));
         let v2 = json::Value::Null;
-        let vec = [json::Value::Number(2), json::Value::Number(3)].to_vec();
+        let vec = [json::Value::Integer(2), json::Value::Integer(3)].to_vec();
         let v3 = json::Value::Array(vec);
         let mut h = HashMap::new();
         h.insert(String::from("key"), v1);
@@ -115,11 +128,11 @@ mod tests {
 
     #[test]
     fn array_test() {
-        let result = extact_output(parse(r#"[1, "str", {"key": 100}, 2]"#));
-        let one = json::Value::Number(1);
+        let result = extact_output(parse(r#"[12.045, "str", {"key": 100}, 2]"#));
+        let one = json::Value::Float(12.045);
         let s = json::Value::String(String::from("str"));
-        let o = obj("key", json::Value::Number(100));
-        let two = json::Value::Number(2);
+        let o = obj("key", json::Value::Integer(100));
+        let two = json::Value::Integer(2);
         assert_eq!(result, json::Value::Array([one, s, o, two].to_vec()));
     }
 }
