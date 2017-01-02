@@ -82,16 +82,16 @@ mod tests {
 
     #[test]
     fn object_test() {
-        let result = extact_output(parse("{\"key\":\"value\"}"));
-        let v = json::Value::String(String::from("value"));
-        assert_eq!(result, obj("key", v));
-    }
-
-    #[test]
-    fn object_with_number_test() {
-        let result = extact_output(parse("{\"key\":1}"));
-        let v = json::Value::Number(1);
-        assert_eq!(result, obj("key", v));
+        let result = extact_output(parse("{\"key\":\"value\", \"key2\": 1, \"key3\": [2, 3]}"));
+        let v1 = json::Value::String(String::from("value"));
+        let v2 = json::Value::Number(1);
+        let vec = [json::Value::Number(2), json::Value::Number(3)].to_vec();
+        let v3 = json::Value::Array(vec);
+        let mut h = HashMap::new();
+        h.insert(String::from("key"), v1);
+        h.insert(String::from("key2"), v2);
+        h.insert(String::from("key3"), v3);
+        assert_eq!(result, json::Value::Object(h));
     }
 
     #[test]
