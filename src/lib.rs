@@ -87,6 +87,14 @@ mod tests {
     }
 
     #[test]
+    fn nested_object_test() {
+        let result = extact_output(parse("{\"key\": {\"nested\": \"value\"}}"));
+        let nested_value = json::Value::String(String::from("value"));
+        let v = obj("nested", nested_value);
+        assert_eq!(result, obj("key", v));
+    }
+
+    #[test]
     fn object_with_spaces_test() {
         let result = extact_output(parse("{\n\"key\": \n\"value\"\n}"));
         let v = json::Value::String(String::from("value"));
