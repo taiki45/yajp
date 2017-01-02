@@ -10,6 +10,7 @@ pub mod json {
     // TODO: Extend number for float value.
     #[derive(PartialEq, Debug, Clone)]
     pub enum Value {
+        Null,
         Number(i64),
         String(::std::string::String),
         Object(::HashMap<::std::string::String, Value>),
@@ -22,6 +23,7 @@ pub fn parse(str: &'static str) -> IResult<&[u8], json::Value> {
 }
 
 named!(value<json::Value>, alt!(
+    null => {|_| json::Value::Null } |
     string => {|s| json::Value::String(String::from(s)) } |
     integer => {|i| json::Value::Number(i) } |
     object => {|h| json::Value::Object(h) } |
@@ -62,6 +64,8 @@ named!(string<&str>, map_res!(delimited!(char!('"'), is_not!("\""), char!('"')),
 
 named!(integer<i64>, map_res!(map_res!(digit, str::from_utf8), FromStr::from_str));
 
+named!(null, ws!(tag!("null")));
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,9 +86,9 @@ mod tests {
 
     #[test]
     fn object_test() {
-        let result = extact_output(parse(r#"{"key":"value", "key2": 1, "key3": [2, 3]}"#));
+        let result = extact_output(parse(r#"{"key":"value", "key2": null, "key3": [2, 3]}"#));
         let v1 = json::Value::String(String::from("value"));
-        let v2 = json::Value::Number(1);
+        let v2 = json::Value::Null;
         let vec = [json::Value::Number(2), json::Value::Number(3)].to_vec();
         let v3 = json::Value::Array(vec);
         let mut h = HashMap::new();
