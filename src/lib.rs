@@ -111,10 +111,11 @@ mod tests {
 
     #[test]
     fn array_test() {
-        let result = extact_output(parse("[1, 2, \"str\"]"));
+        let result = extact_output(parse("[1, \"str\", {\"key\": 100}, 2]"));
         let one = json::Value::Number(1);
-        let two = json::Value::Number(2);
         let s = json::Value::String(String::from("str"));
-        assert_eq!(result, json::Value::Array([one, two, s].to_vec()));
+        let o = obj("key", json::Value::Number(100));
+        let two = json::Value::Number(2);
+        assert_eq!(result, json::Value::Array([one, s, o, two].to_vec()));
     }
 }
