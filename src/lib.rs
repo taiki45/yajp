@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn object_test() {
-        let result = extact_output(parse("{\"key\":\"value\", \"key2\": 1, \"key3\": [2, 3]}"));
+        let result = extact_output(parse(r#"{"key":"value", "key2": 1, "key3": [2, 3]}"#));
         let v1 = json::Value::String(String::from("value"));
         let v2 = json::Value::Number(1);
         let vec = [json::Value::Number(2), json::Value::Number(3)].to_vec();
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn nested_object_test() {
-        let result = extact_output(parse("{\"key\": {\"nested\": \"value\"}}"));
+        let result = extact_output(parse(r#"{"key": {"nested": "value"}}"#));
         let nested_value = json::Value::String(String::from("value"));
         let v = obj("nested", nested_value);
         assert_eq!(result, obj("key", v));
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn array_test() {
-        let result = extact_output(parse("[1, \"str\", {\"key\": 100}, 2]"));
+        let result = extact_output(parse(r#"[1, "str", {"key": 100}, 2]"#));
         let one = json::Value::Number(1);
         let s = json::Value::String(String::from("str"));
         let o = obj("key", json::Value::Number(100));
