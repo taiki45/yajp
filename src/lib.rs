@@ -8,11 +8,12 @@ use std::collections::HashMap;
 
 pub mod json {
     // TODO: Extend number for float value.
-    #[derive(PartialEq, Debug)]
+    #[derive(PartialEq, Debug, Clone)]
     pub enum Value {
         Number(i64),
         String(::std::string::String),
         Object(::HashMap<::std::string::String, Value>),
+        Array(Vec<Value>),
     }
 }
 
@@ -23,7 +24,14 @@ pub fn parse(str: &'static str) -> IResult<&[u8], json::Value> {
 named!(value<json::Value>, alt!(
     string => {|s| json::Value::String(String::from(s)) } |
     integer => {|i| json::Value::Number(i) } |
-    object => {|h| json::Value::Object(h) }
+    object => {|h| json::Value::Object(h) } |
+    array => {|vs| json::Value::Array(vs) }
+));
+
+named!(array<Vec<json::Value>>, delimited!(
+    char!('['),
+    separated_list!(ws!(char!(',')), value),
+    char!(']')
 ));
 
 named!(object<HashMap<::std::string::String, json::Value>>, map!(
@@ -99,5 +107,14 @@ mod tests {
         let result = extact_output(parse("{\n\"key\": \n\"value\"\n}"));
         let v = json::Value::String(String::from("value"));
         assert_eq!(result, obj("key", v));
+    }
+
+    #[test]
+    fn array_test() {
+        let result = extact_output(parse("[1, 2, \"str\"]"));
+        let one = json::Value::Number(1);
+        let two = json::Value::Number(2);
+        let s = json::Value::String(String::from("str"));
+        assert_eq!(result, json::Value::Array([one, two, s].to_vec()));
     }
 }
